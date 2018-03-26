@@ -5,30 +5,29 @@ var { buildSchema } = require('graphql');
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
     type Query {
-        hello: String
-        lol: String
-        quoteOfTheDay: String
-        random: Float!
-        rollThreeDice: [Int]
+        stuff: Stuff
+    }
+    type Stuff{
+        id: ID!
+        name: String!
+        gifURL: String!
+        author: String
     }
 `);
 
+class Stuff{
+    constructor(id, name, gifURL, author){
+        this.id = id;
+        this.name = name;
+        this.gifURL = gifURL;
+        this.author = author;
+    }
+}
+
 // The root provides a resolver function for each API endpoint
 var root = {
-    hello: () => {
-        return 'Hello world!';
-    },
-    lol: () => {
-        return 'LOLOLOLOLOLOLO';
-    },
-    quoteOfTheDay: () => {
-        return Math.random() < 0.5 ? 'Take it easy' : 'Salvation lies within';
-    },
-    random: () => {
-        return Math.random();
-    },
-    rollThreeDice: () => {
-        return [1, 1, 1].map(_ => 2 + Math.floor(Math.random() * 6));
+    stuff: () => {
+        return new Stuff('1', 'mid to B smoke', 'https://media.giphy.com/media/zOvBKUUEERdNm/giphy.gif', 'Baptiste');
     },
 };
 
