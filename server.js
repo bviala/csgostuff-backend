@@ -7,6 +7,9 @@ var schema = buildSchema(`
     type Query {
         hello: String
         lol: String
+        quoteOfTheDay: String
+        random: Float!
+        rollThreeDice: [Int]
     }
 `);
 
@@ -17,6 +20,15 @@ var root = {
     },
     lol: () => {
         return 'LOLOLOLOLOLOLO';
+    },
+    quoteOfTheDay: () => {
+        return Math.random() < 0.5 ? 'Take it easy' : 'Salvation lies within';
+    },
+    random: () => {
+        return Math.random();
+    },
+    rollThreeDice: () => {
+        return [1, 1, 1].map(_ => 2 + Math.floor(Math.random() * 6));
     },
 };
 
