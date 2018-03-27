@@ -1,6 +1,11 @@
 var express = require('express');
 var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
+var mongoose = require('mongoose');
+var Stuff = require('./models/stuff');
+
+// Connect the DB
+mongoose.connect('mongodb://localhost/csgostuff');
 
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
@@ -17,10 +22,11 @@ var schema = buildSchema(`
         INFERNO
         MIRAGE
         NUKE
+        OVERPASS
         TRAIN
     }
     type Query {
-        stuff: Stuff
+        stuffs: [Stuff]
     }
     type Stuff{
         id: ID
@@ -34,23 +40,10 @@ var schema = buildSchema(`
     }
 `);
 
-class Stuff{
-    constructor(id, name, map, stuffType, author, upvotes, downvotes, gifURL){
-        this.id = id;
-        this.name = name;
-        this.map = map;
-        this.stuffType = stuffType;
-        this.author = author;
-        this.upvotes = upvotes;
-        this.downvotes = downvotes;
-        this.gifURL = gifURL;
-    }
-}
-
 // The root provides a resolver function for each API endpoint
 var root = {
-    stuff: () => {
-        return new Stuff('1', 'mid to B smoke', 'DUST2', 'FLASH', 'Baptiste', 190, 32, 'https://media.giphy.com/media/zOvBKUUEERdNm/giphy.gif');
+    stuffs: () => {
+        return Stuff.find();
     },
 };
 
