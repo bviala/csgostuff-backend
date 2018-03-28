@@ -26,7 +26,7 @@ var schema = buildSchema(`
         TRAIN
     }
     type Query {
-        stuffs: [Stuff]
+        stuffs(map: Map, stuffType: StuffType): [Stuff]
     }
     type Stuff{
         id: ID
@@ -42,7 +42,20 @@ var schema = buildSchema(`
 
 // The root provides a resolver function for each API endpoint
 var root = {
-    stuffs: () => {
+    stuffs: ({map, stuffType}) => {
+        if(map && stuffType){
+            return Stuff.find().
+            where('map').equals(map).
+            where('stuffType').equals(stuffType);
+        }
+        if(map && !stuffType){
+            return Stuff.find().
+            where('map').equals(map);
+        }
+        if(!map && stuffType){
+            return Stuff.find().
+            where('stuffType').equals(stuffType);
+        }
         return Stuff.find();
     },
 };
