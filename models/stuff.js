@@ -18,9 +18,6 @@ var stuffSchema = mongoose.Schema({
         'INCENDIARY',
         'SMOKE'
     ]},
-    author: String,
-    upvotes: Number,
-    downvotes: Number,
     gifURL: String
 });
 

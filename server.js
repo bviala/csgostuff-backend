@@ -33,9 +33,7 @@ var schema = buildSchema(`
         name: String
         map: Map
         stuffType: StuffType
-        author: String
-        upvotes: Int
-        downvotes: Int
+        score: Float
         gifURL: String
     }
 `);
