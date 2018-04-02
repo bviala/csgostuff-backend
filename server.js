@@ -9,6 +9,10 @@ mongoose.connect('mongodb://localhost/csgostuff');
 
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
+    enum Vote{
+        UPVOTE
+        DOWNVOTE
+    }
     enum StuffType{
         BOOST
         FLASH
@@ -34,6 +38,7 @@ var schema = buildSchema(`
         map: Map
         stuffType: StuffType
         score: Float
+        myVote: Vote
         gifURL: String
     }
 `);
