@@ -3,7 +3,8 @@ var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
 var mongoose = require('mongoose');
 var Stuff = require('./models/stuff');
-var Vote = require('./models/vote')
+var Vote = require('./models/vote');
+var StuffDTO = require('./DTOs/StuffDTO')
 
 // Connect the DB
 mongoose.connect('mongodb://localhost/csgostuff');
@@ -50,21 +51,30 @@ var schema = buildSchema(`
 
 // The root provides a resolver function for each API endpoint
 var root = {
-    stuffs: ({map, stuffType}) => {
+    stuffs: ({map, stuffType}, req) => {
+        var stuffsPromise;
         if(map && stuffType){
-            return Stuff.find().
+            stuffsPromise = Stuff.find().
             where('map').equals(map).
             where('stuffType').equals(stuffType);
         }
-        if(map && !stuffType){
-            return Stuff.find().
+        else if(map && !stuffType){
+            stuffsPromise = Stuff.find().
             where('map').equals(map);
         }
-        if(!map && stuffType){
-            return Stuff.find().
+        else if(!map && stuffType){
+            stuffsPromise = Stuff.find().
             where('stuffType').equals(stuffType);
         }
-        return Stuff.find();
+        else {
+            stuffsPromise = Stuff.find();
+        }
+       
+        return stuffsPromise.then(docs => {
+            return docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.ip));
+        });
+
+        
     },
     vote: ({stuffID, voteType}, req) => {
         var query = {
