@@ -1,10 +1,11 @@
 var express = require('express');
 var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
+var cors = require('cors');
 var mongoose = require('mongoose');
 var Stuff = require('./models/stuff');
 var Vote = require('./models/vote');
-var StuffDTO = require('./DTOs/StuffDTO')
+var StuffDTO = require('./DTOs/StuffDTO');
 
 // Connect the DB
 mongoose.connect('mongodb://localhost/csgostuff');
@@ -99,6 +100,7 @@ var root = {
 };
 
 var app = express();
+app.use(cors());
 app.use('/graphql', graphqlHTTP({
     schema: schema,
     rootValue: root,
