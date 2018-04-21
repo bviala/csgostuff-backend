@@ -6,49 +6,13 @@ var mongoose = require('mongoose')
 var Stuff = require('./models/stuff')
 var Vote = require('./models/vote')
 var StuffDTO = require('./DTOs/StuffDTO')
+var graphQLSchema = require('./graphQLSchema')
 
 // Connect the DB
 mongoose.connect('mongodb://localhost/csgostuff')
 
 // Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
-    enum VoteType{
-        UPVOTE
-        DOWNVOTE
-    }
-    enum StuffType{
-        BOOST
-        FLASH
-        INCENDIARY
-        SMOKE
-    }
-    enum Map{
-        CACHE
-        COBBLESTONE
-        DUST2
-        INFERNO
-        MIRAGE
-        NUKE
-        OVERPASS
-        TRAIN
-    }
-    type Query {
-        stuffs(map: Map, stuffType: StuffType): [Stuff]
-    }
-    type Mutation{
-        vote(stuffID: ID!, voteType: VoteType!): String
-        removeVote(stuffID: ID!): String
-    }
-    type Stuff{
-        id: ID
-        name: String
-        map: Map
-        stuffType: StuffType
-        score: Float
-        myVote: VoteType
-        gifURL: String
-    }
-`)
+var schema = buildSchema(graphQLSchema)
 
 // The root provides a resolver function for each API endpoint
 var root = {
