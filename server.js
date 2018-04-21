@@ -8,6 +8,10 @@ var Vote = require('./models/vote')
 var StuffDTO = require('./DTOs/StuffDTO')
 var graphQLSchema = require('./graphQLSchema')
 
+var { GSI_CLIENT_ID } = require('./secrets')
+var jwt = require('express-jwt')
+const jwksRsa = require('jwks-rsa')
+
 // Connect the DB
 mongoose.connect('mongodb://localhost/csgostuff')
 
@@ -17,6 +21,7 @@ var schema = buildSchema(graphQLSchema)
 // The root provides a resolver function for each API endpoint
 var root = {
   stuffs: ({map, stuffType}, req) => {
+    if (req.user) console.log('logged user: ' + req.user.sub)
     var stuffsPromise
     if (map && stuffType) {
       stuffsPromise = Stuff.find()
@@ -60,7 +65,23 @@ var root = {
 
 var app = express()
 app.use(cors())
-app.use('/auth/google', (res, req) => console.log(res))
+
+app.use('/graphql', jwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: 'https://www.googleapis.com/oauth2/v3/certs'
+  }),
+  audience: GSI_CLIENT_ID,
+  issuer: 'accounts.google.com',
+  credentialsRequired: false
+}))
+app.use((err, req, res, next) => {
+  console.log('error: ' + err)
+  next()
+})
+
 app.use('/graphql', graphqlHTTP({
   schema: schema,
   rootValue: root,

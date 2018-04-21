@@ -61,3 +61,5 @@ typings/
 csgostuff\.code-workspace
 
 \.DS_Store
+
+secrets\.js
