@@ -1,13 +1,13 @@
 var Vote = require('../models/vote')
 
 class StuffDTO {
-  constructor (id, name, map, stuffType, gifURL, reqIP) {
+  constructor (id, name, map, stuffType, gifURL, reqUserGoogleId) {
     this.id = id
     this.name = name
     this.map = map
     this.stuffType = stuffType
     this.gifURL = gifURL
-    this.reqIP = reqIP
+    this.reqUserGoogleId = reqUserGoogleId
   }
 
   score () {
@@ -18,9 +18,9 @@ class StuffDTO {
   }
 
   myVote () {
-    let query = {
+    const query = {
       stuffID: this.id,
-      voterIP: this.reqIP
+      voterGoogleId: this.reqUserGoogleId
     }
     return Vote.findOne(query).then(doc => {
       if (doc) return doc.voteType

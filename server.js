@@ -21,8 +21,7 @@ var schema = buildSchema(graphQLSchema)
 // The root provides a resolver function for each API endpoint
 var root = {
   stuffs: ({map, stuffType}, req) => {
-    if (req.user) console.log('logged user: ' + req.user.sub)
-    var stuffsPromise
+    let stuffsPromise
     if (map && stuffType) {
       stuffsPromise = Stuff.find()
         .where('map').equals(map)
@@ -38,28 +37,36 @@ var root = {
     }
 
     return stuffsPromise.then(docs => {
-      return docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.ip))
+      return docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId))
     })
   },
   vote: ({stuffID, voteType}, req) => {
-    var query = {
-      stuffID: stuffID,
-      voterIP: req.ip
+    if (req.userGoogleId) {
+      const query = {
+        stuffID: stuffID,
+        voterGoogleId: req.userGoogleId
+      }
+      Vote.findOneAndUpdate(query, {voteType: voteType}, {upsert: true}, err => {
+        if (err) console.error(err)
+      })
+      return 'successfully voted'
+    } else {
+      return 'Unauthorized'
     }
-    Vote.findOneAndUpdate(query, {voteType: voteType}, {upsert: true}, function (err) {
-      if (err) console.log(err)
-    })
-    return 'successfully voted'
   },
   removeVote: ({stuffID}, req) => {
-    var query = {
-      stuffID: stuffID,
-      voterIP: req.ip
+    if (req.userGoogleId) {
+      const query = {
+        stuffID: stuffID,
+        voterGoogleId: req.userGoogleId
+      }
+      Vote.findOneAndRemove(query, err => {
+        if (err) console.log(err)
+      })
+      return 'vote successfully removed'
+    } else {
+      return 'Unauthorized'
     }
-    Vote.findOneAndRemove(query, function (err) {
-      if (err) console.log(err)
-    })
-    return 'vote successfully removed'
   }
 }
 
@@ -79,6 +86,15 @@ app.use('/graphql', jwt({
 }))
 app.use((err, req, res, next) => {
   console.log('error: ' + err)
+  next()
+})
+app.use((req, res, next) => {
+  if (req.user) {
+    req.userGoogleId = req.user.sub
+    console.log('authenticated request (' + req.userGoogleId + ')')
+  } else {
+    console.log('unauthenticated request')
+  }
   next()
 })
 
