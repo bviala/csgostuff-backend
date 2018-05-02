@@ -10,11 +10,16 @@ class StuffDTO {
     this.reqUserGoogleId = reqUserGoogleId
   }
 
-  score () {
-    return Vote.count({
+  async score () {
+    const votePos = await Vote.count({
       stuffID: this.id,
       voteType: 'UPVOTE'
     })
+    const voteNeg = await Vote.count({
+      stuffID: this.id,
+      voteType: 'DOWNVOTE'
+    })
+    return votePos - voteNeg
   }
 
   myVote () {
