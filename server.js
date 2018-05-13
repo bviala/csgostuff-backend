@@ -20,8 +20,10 @@ var schema = buildSchema(graphQLSchema)
 
 // The root provides a resolver function for each API endpoint
 var root = {
-  stuffs: ({map, stuffType}, req) => {
+  stuffs: ({map, stuffType, first, after}, req) => {
+    let lastElementCursor
     let stuffsPromise
+
     if (map && stuffType) {
       stuffsPromise = Stuff.find()
         .where('map').equals(map)
@@ -36,9 +38,50 @@ var root = {
       stuffsPromise = Stuff.find()
     }
 
-    return stuffsPromise.then(docs => {
-      return docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId))
-    })
+    return stuffsPromise
+      // mongoose doc to Object with methods for vote and score fetching
+      .then(docs => docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId)))
+
+      // give rank as a cursor
+      .then(docs => {
+        return docs.map((doc, index) => {
+          return {
+            node: doc,
+            cursor: index
+          }
+        })
+      })
+
+      // remove results before given cursor ($after)
+      .then(docs => {
+        if (after) {
+          return docs.filter(doc => doc.cursor > after)
+        }
+        return docs
+      })
+
+      // keep the amount of result required ($first)
+      .then(docs => {
+        lastElementCursor = docs[docs.length - 1].cursor
+        if (first) {
+          if (after) {
+            return docs.filter(doc => doc.cursor - after <= first)
+          }
+          return docs.filter(doc => doc.cursor < first)
+        }
+        return docs
+      })
+
+      // wrap results in StuffConnection
+      .then(docs => {
+        return {
+          pageInfo: {
+            endCursor: docs[docs.length - 1].cursor,
+            hasNextPage: docs[docs.length - 1].cursor !== lastElementCursor
+          },
+          edges: docs
+        }
+      })
   },
   vote: ({stuffID, voteType}, req) => {
     if (req.userGoogleId) {

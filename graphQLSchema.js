@@ -21,7 +21,7 @@ var schema =
           TRAIN
       }
       type Query {
-          stuffs(map: Map, stuffType: StuffType): [Stuff]
+          stuffs(map: Map, stuffType: StuffType, first: Int, after: String): StuffConnection
       }
       type Mutation{
           vote(stuffID: ID!, voteType: VoteType!): String
@@ -32,10 +32,24 @@ var schema =
           name: String
           map: Map
           stuffType: StuffType
-          score: Float
+          score: Int
           myVote: VoteType
           gifURL: String
       }
+      type StuffEdge{
+          cursor: String!
+          node: Stuff!
+      }
+      type StuffConnection{
+          pageInfo: PageInfo!
+          edges: [StuffEdge]
+      }
+      type PageInfo{
+          endCursor: String!
+          hasNextPage: Boolean!
+      }
+
+
   `
 
 module.exports = schema
