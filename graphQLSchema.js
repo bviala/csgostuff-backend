@@ -21,7 +21,7 @@ var schema =
           TRAIN
       }
       type Query {
-          stuffs(map: Map, stuffType: StuffType, first: Int, after: String): StuffConnection
+          stuffsConnection(map: Map, stuffType: StuffType, first: Int, after: String): StuffConnection
       }
       type Mutation{
           vote(stuffID: ID!, voteType: VoteType!): String
@@ -45,7 +45,7 @@ var schema =
           edges: [StuffEdge]
       }
       type PageInfo{
-          endCursor: String!
+          endCursor: String
           hasNextPage: Boolean!
       }
 

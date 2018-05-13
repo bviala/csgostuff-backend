@@ -20,8 +20,8 @@ var schema = buildSchema(graphQLSchema)
 
 // The root provides a resolver function for each API endpoint
 var root = {
-  stuffs: ({map, stuffType, first, after}, req) => {
-    let lastElementCursor
+  stuffsConnection: ({map, stuffType, first, after}, req) => {
+    let lastResultCursor
     let stuffsPromise
 
     if (map && stuffType) {
@@ -52,6 +52,14 @@ var root = {
         })
       })
 
+      // get the last result cursor
+      .then(docs => {
+        if (docs.length > 0) {
+          lastResultCursor = docs[docs.length - 1].cursor
+        }
+        return docs
+      })
+
       // remove results before given cursor ($after)
       .then(docs => {
         if (after) {
@@ -62,7 +70,6 @@ var root = {
 
       // keep the amount of result required ($first)
       .then(docs => {
-        lastElementCursor = docs[docs.length - 1].cursor
         if (first) {
           if (after) {
             return docs.filter(doc => doc.cursor - after <= first)
@@ -76,8 +83,8 @@ var root = {
       .then(docs => {
         return {
           pageInfo: {
-            endCursor: docs[docs.length - 1].cursor,
-            hasNextPage: docs[docs.length - 1].cursor !== lastElementCursor
+            endCursor: docs.length > 0 ? docs[docs.length - 1].cursor : null,
+            hasNextPage: docs.length > 0 ? docs[docs.length - 1].cursor !== lastResultCursor : false
           },
           edges: docs
         }
