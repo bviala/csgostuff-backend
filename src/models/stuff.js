@@ -26,7 +26,10 @@ const stuffSchema = mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  diffScore: Number,
+  diffScore: {
+    type: Number,
+    default: 0
+  },
   wilsonScore: Number
 })
 
