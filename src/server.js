@@ -23,47 +23,40 @@ const schema = buildSchema(graphQLSchema)
 // The root provides a resolver function for each API endpoint
 const root = {
   stuffsConnection: async ({map, stuffType, first, after}, req) => {
-    let lastResultCursor
+    const offset = after ? Number(after) + 1 : 0
+    let hasNextPage = false
 
     let stuffsPromise = Stuff.find()
     if (map) stuffsPromise = stuffsPromise.where('map').equals(map)
     if (stuffType) stuffsPromise = stuffsPromise.where('stuffType').equals(stuffType)
+    stuffsPromise = stuffsPromise.sort('-wilsonScore')
+    if (after) stuffsPromise = stuffsPromise.skip(offset)
+    if (first) stuffsPromise = stuffsPromise.limit(first + 1) // try to get one more of number asked to determine if there's a next page
 
     let docs = await stuffsPromise
+
+    // detect if there is results after those requested
+    if (first && docs.length > first) {
+      docs.pop()
+      hasNextPage = true
+    }
 
     // mongoose doc to Object with methods for vote and score fetching
     docs = docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, doc.diffScore, req.userGoogleId))
 
-    // give rank as a cursor
+    // give cursors
     docs = docs.map((doc, index) => {
       return {
         node: doc,
-        cursor: index
+        cursor: index + offset
       }
     })
-
-    // get the last result cursor
-    if (docs.length > 0) lastResultCursor = docs[docs.length - 1].cursor
-
-    // remove results before given cursor ($after)
-    if (after) {
-      docs = docs.filter(doc => doc.cursor > after)
-    }
-
-    // keep the amount of result required ($first)
-    if (first) {
-      if (after) {
-        docs = docs.filter(doc => doc.cursor - after <= first)
-      } else {
-        docs = docs.filter(doc => doc.cursor < first)
-      }
-    }
 
     // wrap results in StuffConnection
     return {
       pageInfo: {
         endCursor: docs.length > 0 ? docs[docs.length - 1].cursor : null,
-        hasNextPage: docs.length > 0 ? docs[docs.length - 1].cursor !== lastResultCursor : false
+        hasNextPage: hasNextPage
       },
       edges: docs
     }
