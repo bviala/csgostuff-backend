@@ -20,75 +20,51 @@ var schema = buildSchema(graphQLSchema)
 
 // The root provides a resolver function for each API endpoint
 var root = {
-  stuffsConnection: ({map, stuffType, first, after}, req) => {
+  stuffsConnection: async ({map, stuffType, first, after}, req) => {
     let lastResultCursor
-    let stuffsPromise
 
-    if (map && stuffType) {
-      stuffsPromise = Stuff.find()
-        .where('map').equals(map)
-        .where('stuffType').equals(stuffType)
-    } else if (map && !stuffType) {
-      stuffsPromise = Stuff.find()
-        .where('map').equals(map)
-    } else if (!map && stuffType) {
-      stuffsPromise = Stuff.find()
-        .where('stuffType').equals(stuffType)
-    } else {
-      stuffsPromise = Stuff.find()
+    let stuffsPromise = Stuff.find()
+    if (map) stuffsPromise = stuffsPromise.where('map').equals(map)
+    if (stuffType) stuffsPromise = stuffsPromise.where('stuffType').equals(stuffType)
+
+    let docs = await stuffsPromise
+
+    // mongoose doc to Object with methods for vote and score fetching
+    docs = docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId))
+
+    // give rank as a cursor
+    docs = docs.map((doc, index) => {
+      return {
+        node: doc,
+        cursor: index
+      }
+    })
+
+    // get the last result cursor
+    if (docs.length > 0) lastResultCursor = docs[docs.length - 1].cursor
+
+    // remove results before given cursor ($after)
+    if (after) {
+      docs = docs.filter(doc => doc.cursor > after)
     }
 
-    return stuffsPromise
-      // mongoose doc to Object with methods for vote and score fetching
-      .then(docs => docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId)))
+    // keep the amount of result required ($first)
+    if (first) {
+      if (after) {
+        docs = docs.filter(doc => doc.cursor - after <= first)
+      } else {
+        docs.filter(doc => doc.cursor < first)
+      }
+    }
 
-      // give rank as a cursor
-      .then(docs => {
-        return docs.map((doc, index) => {
-          return {
-            node: doc,
-            cursor: index
-          }
-        })
-      })
-
-      // get the last result cursor
-      .then(docs => {
-        if (docs.length > 0) {
-          lastResultCursor = docs[docs.length - 1].cursor
-        }
-        return docs
-      })
-
-      // remove results before given cursor ($after)
-      .then(docs => {
-        if (after) {
-          return docs.filter(doc => doc.cursor > after)
-        }
-        return docs
-      })
-
-      // keep the amount of result required ($first)
-      .then(docs => {
-        if (first) {
-          if (after) {
-            return docs.filter(doc => doc.cursor - after <= first)
-          }
-          return docs.filter(doc => doc.cursor < first)
-        }
-        return docs
-      })
-
-      // wrap results in StuffConnection
-      .then(docs => {
-        return {
-          pageInfo: {
-            endCursor: docs.length > 0 ? docs[docs.length - 1].cursor : null,
-            hasNextPage: docs.length > 0 ? docs[docs.length - 1].cursor !== lastResultCursor : false
-          },
-          edges: docs
-        }
-      })
+    // wrap results in StuffConnection
+    return {
+      pageInfo: {
+        endCursor: docs.length > 0 ? docs[docs.length - 1].cursor : null,
+        hasNextPage: docs.length > 0 ? docs[docs.length - 1].cursor !== lastResultCursor : false
+      },
+      edges: docs
+    }
   },
   vote: ({stuffID, voteType}, req) => {
     if (req.userGoogleId) {
