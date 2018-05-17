@@ -1,6 +1,6 @@
-var mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
-var stuffSchema = mongoose.Schema({
+const stuffSchema = mongoose.Schema({
   name: String,
   map: { type: String,
     enum: [
@@ -13,14 +13,21 @@ var stuffSchema = mongoose.Schema({
       'OVERPASS',
       'TRAIN'
     ]},
-  stuffType: {type: String,
+  stuffType: {
+    type: String,
     enum: [
       'BOOST',
       'FLASH',
       'INCENDIARY',
       'SMOKE'
     ]},
-  gifURL: String
+  gifURL: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  diffScore: Number,
+  wilsonScore: Number
 })
 
 module.exports = mongoose.model('Stuff', stuffSchema)

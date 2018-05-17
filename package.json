@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/bviala/csgostuff-backend#readme",
   "dependencies": {
+    "average-rating": "^1.1.6",
     "cors": "^2.8.4",
     "eslint": "^4.19.1",
     "express": "^4.16.3",

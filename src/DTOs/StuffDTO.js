@@ -1,16 +1,17 @@
 var Vote = require('../models/vote')
 
 class StuffDTO {
-  constructor (id, name, map, stuffType, gifURL, reqUserGoogleId) {
+  constructor (id, name, map, stuffType, gifURL, score, reqUserGoogleId) {
     this.id = id
     this.name = name
     this.map = map
     this.stuffType = stuffType
     this.gifURL = gifURL
+    this.score = score
     this.reqUserGoogleId = reqUserGoogleId
   }
 
-  async score () {
+  /* async score () {
     const votePos = await Vote.count({
       stuffID: this.id,
       voteType: 'UPVOTE'
@@ -20,7 +21,7 @@ class StuffDTO {
       voteType: 'DOWNVOTE'
     })
     return votePos - voteNeg
-  }
+  } */
 
   myVote () {
     const query = {

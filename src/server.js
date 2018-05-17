@@ -1,25 +1,27 @@
-var express = require('express')
-var graphqlHTTP = require('express-graphql')
-var { buildSchema } = require('graphql')
-var cors = require('cors')
-var mongoose = require('mongoose')
-var Stuff = require('./models/stuff')
-var Vote = require('./models/vote')
-var StuffDTO = require('./DTOs/StuffDTO')
-var graphQLSchema = require('./graphQLSchema')
+const express = require('express')
+const graphqlHTTP = require('express-graphql')
+const { buildSchema } = require('graphql')
+const cors = require('cors')
+const mongoose = require('mongoose')
+const Stuff = require('./models/stuff')
+const Vote = require('./models/vote')
+const StuffDTO = require('./DTOs/StuffDTO')
+const graphQLSchema = require('./graphQLSchema')
 
-var { GSI_CLIENT_ID } = require('./secrets')
-var jwt = require('express-jwt')
+const { GSI_CLIENT_ID } = require('./secrets')
+const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
+
+const updateStuffScores = require('./updateStuffScores')
 
 // Connect the DB
 mongoose.connect('mongodb://localhost/csgostuff')
 
 // Construct a schema, using GraphQL schema language
-var schema = buildSchema(graphQLSchema)
+const schema = buildSchema(graphQLSchema)
 
 // The root provides a resolver function for each API endpoint
-var root = {
+const root = {
   stuffsConnection: async ({map, stuffType, first, after}, req) => {
     let lastResultCursor
 
@@ -30,7 +32,7 @@ var root = {
     let docs = await stuffsPromise
 
     // mongoose doc to Object with methods for vote and score fetching
-    docs = docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, req.userGoogleId))
+    docs = docs.map(doc => new StuffDTO(doc._id, doc.name, doc.map, doc.stuffType, doc.gifURL, doc.diffScore, req.userGoogleId))
 
     // give rank as a cursor
     docs = docs.map((doc, index) => {
@@ -53,7 +55,7 @@ var root = {
       if (after) {
         docs = docs.filter(doc => doc.cursor - after <= first)
       } else {
-        docs.filter(doc => doc.cursor < first)
+        docs = docs.filter(doc => doc.cursor < first)
       }
     }
 
@@ -72,10 +74,9 @@ var root = {
         stuffID: stuffID,
         voterGoogleId: req.userGoogleId
       }
-      Vote.findOneAndUpdate(query, {voteType: voteType}, {upsert: true}, err => {
-        if (err) console.error(err)
-      })
-      return 'successfully voted'
+      Vote.findOneAndUpdate(query, {voteType: voteType}, {upsert: true})
+        .then(() => updateStuffScores(stuffID))
+      return 'Successfully voted'
     } else {
       return 'Unauthorized'
     }
@@ -86,17 +87,16 @@ var root = {
         stuffID: stuffID,
         voterGoogleId: req.userGoogleId
       }
-      Vote.findOneAndRemove(query, err => {
-        if (err) console.log(err)
-      })
-      return 'vote successfully removed'
+      Vote.findOneAndRemove(query)
+        .then(() => updateStuffScores(stuffID))
+      return 'Vote successfully removed'
     } else {
       return 'Unauthorized'
     }
   }
 }
 
-var app = express()
+const app = express()
 app.use(cors())
 
 app.use('/graphql', jwt({
