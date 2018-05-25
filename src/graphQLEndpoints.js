@@ -4,6 +4,8 @@ const StuffDTO = require('./DTOs/StuffDTO')
 const updateStuffScores = require('./updateStuffScores')
 const { ADMINS_GOOGLE_ID } = require('./secrets')
 
+const gifURLValidator = /(^https:\/\/(zippy|fat|giant).gfycat.com\/.+\.(mp4|webm)$)|(^https:\/\/media.giphy.com\/media\/.+\/giphy.mp4$)/
+
 const stuffsConnectionQuery = async ({map, stuffType, first, after}, req) => {
   const offset = after ? Number(after) + 1 : 0
   let hasNextPage = false
@@ -73,18 +75,16 @@ const removeVoteMutation = ({stuffID}, req) => {
 }
 
 const createStuffMutation = ({name, map, stuffType, gifURL}, req) => {
-  if (req.userGoogleId) {
-    const newStuff = new Stuff({
-      name: name,
-      map: map,
-      stuffType: stuffType,
-      gifURL: gifURL
-    })
-    newStuff.save()
-    return 'Successfully created Stuff'
-  } else {
-    return 'Unauthorized'
-  }
+  if (!req.userGoogleId) return 'Unauthorized'
+  if (!gifURLValidator.test(gifURL)) return 'Invalid gifURL'
+  const newStuff = new Stuff({
+    name: name,
+    map: map,
+    stuffType: stuffType,
+    gifURL: gifURL
+  })
+  newStuff.save()
+  return 'Successfully created Stuff'
 }
 
 const removeStuffMutation = ({stuffID}, req) => {
