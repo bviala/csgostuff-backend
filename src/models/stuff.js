@@ -30,7 +30,10 @@ const stuffSchema = mongoose.Schema({
     type: Number,
     default: 0
   },
-  wilsonScore: Number
+  wilsonScore: {
+    type: Number,
+    default: 0
+  }
 })
 
 module.exports = mongoose.model('Stuff', stuffSchema)

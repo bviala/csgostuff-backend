@@ -26,6 +26,8 @@ var schema =
       type Mutation{
           vote(stuffID: ID!, voteType: VoteType!): String
           removeVote(stuffID: ID!): String
+          createStuff(name: String!, map: Map!, stuffType: StuffType!, gifURL: String!) : String
+          removeStuff(stuffID: ID!) : String
       }
       type Stuff{
           id: ID
