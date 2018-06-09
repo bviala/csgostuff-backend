@@ -56,7 +56,7 @@ const voteMutation = ({stuffID, voteType}, req) => {
       .then(() => updateStuffScores(stuffID))
     return 'Successfully voted'
   } else {
-    return 'Unauthorized'
+    throw new Error('Unauthorized')
   }
 }
 
@@ -75,8 +75,8 @@ const removeVoteMutation = ({stuffID}, req) => {
 }
 
 const createStuffMutation = ({name, map, stuffType, gifURL}, req) => {
-  if (!req.userGoogleId) return 'Unauthorized'
-  if (!gifURLValidator.test(gifURL)) return 'Invalid gifURL'
+  if (!req.userGoogleId) throw new Error('Unauthorized')
+  if (!gifURLValidator.test(gifURL)) throw new Error('Invalid GIF URL')
   const newStuff = new Stuff({
     name: name,
     map: map,
@@ -92,7 +92,7 @@ const removeStuffMutation = ({stuffID}, req) => {
     Stuff.findByIdAndDelete(stuffID).exec()
     return 'Successfully removed Stuff'
   } else {
-    return 'Unauthorized'
+    throw new Error('Unauthorized')
   }
 }
 
