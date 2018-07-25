@@ -4,13 +4,13 @@ const { buildSchema } = require('graphql')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const graphQLSchema = require('./graphQLSchema')
-const { GSI_CLIENT_ID } = require('./secrets')
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 const root = require('./graphQLEndpoints')
 
 // Connect the DB
-mongoose.connect('mongodb://localhost/csgostuff')
+const dbUri = process.env.DB_URI
+mongoose.connect(dbUri)
 
 // Construct a schema, using GraphQL schema language
 const schema = buildSchema(graphQLSchema)
@@ -25,7 +25,7 @@ app.use('/graphql', jwt({
     jwksRequestsPerMinute: 5,
     jwksUri: 'https://www.googleapis.com/oauth2/v3/certs'
   }),
-  audience: GSI_CLIENT_ID,
+  audience: process.env.GOOGLE_CLIENT_ID,
   issuer: 'accounts.google.com',
   credentialsRequired: false
 }))

@@ -1,0 +1,7 @@
+{
+  "env": {
+    "GOOGLE_CLIENT_ID": "@csgostuff-google-client-id",
+    "DB_URI": "@csgostuff-db-uri",
+    "ADMIN_GOOGLE_ID": "@csgostuff-admin-google-id"
+  }
+}

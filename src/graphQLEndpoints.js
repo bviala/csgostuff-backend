@@ -2,7 +2,6 @@ const Stuff = require('./models/stuff')
 const Vote = require('./models/vote')
 const StuffDTO = require('./DTOs/StuffDTO')
 const updateStuffScores = require('./updateStuffScores')
-const { ADMINS_GOOGLE_ID } = require('./secrets')
 
 const gifURLValidator = /(^https:\/\/(zippy|fat|giant).gfycat.com\/.+\.(mp4|webm)$)|(^https:\/\/media.giphy.com\/media\/.+\/giphy.mp4$)/
 
@@ -88,7 +87,7 @@ const createStuffMutation = ({name, map, stuffType, gifURL}, req) => {
 }
 
 const removeStuffMutation = ({stuffID}, req) => {
-  if (req.userGoogleId && ADMINS_GOOGLE_ID.includes(req.userGoogleId)) {
+  if (req.userGoogleId && req.userGoogleId === process.env.ADMIN_GOOGLE_ID) {
     Stuff.findByIdAndDelete(stuffID).exec()
     return 'Successfully removed Stuff'
   } else {
