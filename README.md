@@ -11,7 +11,7 @@ This project features:
 - Stuff filtering
 - Infinite scrolling
 
-[Live demo here.](kindhearted-battle.surge.sh/#/) The backend uses a free hosting that goes idle when not used, so content will probably take time to load on your first visit.
+[Live demo here.](https://kindhearted-battle.surge.sh/#/) The backend uses a free hosting that goes idle when not used, so content will probably take time to load on your first visit.
 
 To this day:
 - Not responsive. Will look terrible on mobile.
